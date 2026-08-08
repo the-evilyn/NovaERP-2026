@@ -149,7 +149,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
 
             // Calculate heuristic average daily consumption
             BigDecimal avgDailyConsumption = BigDecimal.valueOf(5.0);
-            if (prod.getCategory() != null && prod.getCategory().contains("Alimentaire")) {
+            if (prod.getCategory() != null && prod.getCategory().getName() != null && prod.getCategory().getName().contains("Alimentaire")) {
                 avgDailyConsumption = BigDecimal.valueOf(8.5);
             }
 

@@ -65,7 +65,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalAchats = allPurchases.stream()
-                .filter(p -> p.getStatus() != PurchaseStatus.ANNULEE)
+                .filter(p -> p.getStatus() != PurchaseStatus.ANNULE)
                 .map(PurchaseOrder::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -109,12 +109,12 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         BigDecimal achatsCurrentMonth = allPurchases.stream()
-                .filter(p -> p.getStatus() != PurchaseStatus.ANNULEE && !p.getOrderDate().isBefore(startCurrentMonth))
+                .filter(p -> p.getStatus() != PurchaseStatus.ANNULE && !p.getOrderDate().isBefore(startCurrentMonth))
                 .map(PurchaseOrder::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal achatsPreviousMonth = allPurchases.stream()
-                .filter(p -> p.getStatus() != PurchaseStatus.ANNULEE && !p.getOrderDate().isBefore(startPreviousMonth) && !p.getOrderDate().isAfter(endPreviousMonth))
+                .filter(p -> p.getStatus() != PurchaseStatus.ANNULE && !p.getOrderDate().isBefore(startPreviousMonth) && !p.getOrderDate().isAfter(endPreviousMonth))
                 .map(PurchaseOrder::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -164,7 +164,7 @@ public class DashboardServiceImpl implements DashboardService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             BigDecimal purchaseSum = allPurchases.stream()
-                    .filter(p -> p.getStatus() != PurchaseStatus.ANNULEE && p.getOrderDate().getYear() == year && p.getOrderDate().getMonthValue() == month)
+                    .filter(p -> p.getStatus() != PurchaseStatus.ANNULE && p.getOrderDate().getYear() == year && p.getOrderDate().getMonthValue() == month)
                     .map(PurchaseOrder::getTotalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 

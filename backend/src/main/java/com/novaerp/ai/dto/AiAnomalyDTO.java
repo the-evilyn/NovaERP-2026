@@ -87,7 +87,7 @@ public class AiAnomalyDTO {
                 .type(a.getType())
                 .severite(a.getSeverity())
                 .titre(a.getTitle())
-                .description(a.getMessage() != null ? a.getMessage() : a.getDescription())
+                .description(a.getDescription())
                 .dateDetection(a.getDetectionDate())
                 .entiteType(a.getEntityType())
                 .entiteId(a.getEntityId())

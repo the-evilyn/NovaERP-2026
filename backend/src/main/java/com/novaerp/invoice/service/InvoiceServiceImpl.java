@@ -76,7 +76,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         LocalDate issueDate = dto.getDate() != null ? dto.getDate() : LocalDate.now();
         LocalDate dueDate = dto.getDateEcheance() != null
                 ? dto.getDateEcheance()
-                : issueDate.plusDays(client.getPaymentTerms() != null ? client.getPaymentTerms() : 30);
+                : issueDate.plusDays(30);
 
         Invoice invoice = Invoice.builder()
                 .invoiceNumber(reference)
@@ -149,7 +149,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .type(InvoiceType.STANDARD)
                 .statut(InvoiceStatus.VALIDEE)
                 .date(LocalDate.now())
-                .dateEcheance(LocalDate.now().plusDays(salesOrder.getClient().getPaymentTerms() != null ? salesOrder.getClient().getPaymentTerms() : 30))
+                .dateEcheance(LocalDate.now().plusDays(30))
                 .tva(salesOrder.getTaxRate())
                 .discountAmount(salesOrder.getDiscountAmount())
                 .notes("Facture issue de la commande " + salesOrder.getOrderNumber())
