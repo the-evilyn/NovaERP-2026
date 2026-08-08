@@ -1,10 +1,33 @@
-node_modules/
+# Build outputs
 target/
+**/target/
 dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment and credentials
 .env
+.env*.local
+*.pem
+*.key
+
+# IDE and Editor files
 .idea/
 .vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Logs and OS files
 *.log
+logs/
 *.class
 *.jar
 .DS_Store
+Thumbs.db

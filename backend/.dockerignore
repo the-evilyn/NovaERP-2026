@@ -1,0 +1,10 @@
+target/
+*.class
+.git/
+.gitignore
+.idea/
+.vscode/
+*.log
+*.env
+docker/
+docs/
