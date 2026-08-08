@@ -1,7 +1,7 @@
 package com.novaerp.alert.entity;
 
-import com.novaerp.auth.entity.User;
 import com.novaerp.common.entity.BaseAuditableEntity;
+import com.novaerp.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
