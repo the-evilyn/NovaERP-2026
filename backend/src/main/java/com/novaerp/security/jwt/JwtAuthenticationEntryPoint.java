@@ -35,7 +35,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
-                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .errorCode("UNAUTHORIZED")
                 .message("Full authentication is required to access this resource: " + authException.getMessage())
                 .path(request.getRequestURI())
                 .timestamp(LocalDateTime.now())

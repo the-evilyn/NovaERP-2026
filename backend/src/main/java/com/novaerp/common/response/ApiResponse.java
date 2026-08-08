@@ -71,6 +71,16 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static <T> ApiResponse<T> created(T data, String message, String path) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .path(path)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     public static <T> ApiResponse<T> error(String message, List<String> errors, String path) {
         return ApiResponse.<T>builder()
                 .success(false)

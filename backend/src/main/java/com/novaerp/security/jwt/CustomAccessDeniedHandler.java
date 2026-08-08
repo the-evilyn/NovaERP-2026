@@ -35,7 +35,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.FORBIDDEN.value())
-                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .errorCode("FORBIDDEN")
                 .message("You do not have the required permissions to perform this operation.")
                 .path(request.getRequestURI())
                 .timestamp(LocalDateTime.now())
