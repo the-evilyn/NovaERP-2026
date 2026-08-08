@@ -1,0 +1,7 @@
+package com.novaerp.user.entity;
+
+public enum UserStatus {
+    ACTIVE,
+    INACTIVE,
+    SUSPENDED
+}
