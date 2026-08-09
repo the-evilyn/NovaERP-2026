@@ -1,14 +1,12 @@
 package com.novaerp.dashboard.service;
 
 import com.novaerp.client.repository.ClientRepository;
-import com.novaerp.dashboard.dto.DashboardStatsDTO;
-import com.novaerp.dashboard.dto.RecentActivityDTO;
-import com.novaerp.dashboard.dto.SalesTrendDTO;
-import com.novaerp.dashboard.dto.TopProductDTO;
+import com.novaerp.dashboard.dto.*;
 import com.novaerp.invoice.entity.InvoiceStatus;
 import com.novaerp.invoice.repository.InvoiceRepository;
 import com.novaerp.payment.entity.Payment;
 import com.novaerp.payment.repository.PaymentRepository;
+import com.novaerp.product.dto.ProductDTO;
 import com.novaerp.product.entity.Product;
 import com.novaerp.product.repository.ProductRepository;
 import com.novaerp.purchase.entity.PurchaseOrder;
@@ -53,16 +51,26 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardStatsDTO getDashboardStats() {
-        log.info("Calculating real-time dashboard KPIs");
+        log.info("Calculating real-time dashboard KPIs for frontend and enterprise reporting");
 
         List<SalesOrder> allSales = salesOrderRepository.findAll();
         List<PurchaseOrder> allPurchases = purchaseOrderRepository.findAll();
         List<Stock> allStocks = stockRepository.findAll();
+        List<Product> allProducts = productRepository.findAll();
+        List<SalesOrderItem> allSaleItems = salesOrderItemRepository.findAll();
 
+        // 1. Chiffre d'affaires & Profit
         BigDecimal totalVentes = allSales.stream()
                 .filter(s -> s.getStatus() != SaleStatus.ANNULEE)
                 .map(SalesOrder::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalCostOfGoodsSold = allSaleItems.stream()
+                .filter(item -> item.getSalesOrder() != null && item.getSalesOrder().getStatus() != SaleStatus.ANNULEE)
+                .map(item -> item.getProduct().getPurchasePrice().multiply(item.getQuantityOrdered()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal benefice = totalVentes.subtract(totalCostOfGoodsSold);
 
         BigDecimal totalAchats = allPurchases.stream()
                 .filter(p -> p.getStatus() != PurchaseStatus.ANNULE)
@@ -127,7 +135,56 @@ public class DashboardServiceImpl implements DashboardService {
             evolutionAchats = 100.0;
         }
 
+        // 2. Top Clients (aggregated from Sales Orders)
+        Map<Long, BigDecimal> clientTotals = new HashMap<>();
+        Map<Long, String> clientNames = new HashMap<>();
+        for (SalesOrder s : allSales) {
+            if (s.getStatus() != SaleStatus.ANNULEE && s.getClient() != null) {
+                Long cId = s.getClient().getId();
+                clientTotals.put(cId, clientTotals.getOrDefault(cId, BigDecimal.ZERO).add(s.getTotalAmount()));
+                clientNames.put(cId, s.getClient().getName());
+            }
+        }
+        List<TopClientDTO> topClients = clientTotals.entrySet().stream()
+                .map(e -> TopClientDTO.builder().clientId(e.getKey()).nom(clientNames.get(e.getKey())).total(e.getValue()).build())
+                .sorted((a, b) -> b.getTotal().compareTo(a.getTotal()))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        // 3. Top Products
+        List<TopProductDTO> topProduits = getTopProducts(5);
+
+        // 4. Low stock products
+        List<ProductDTO> lowStockProducts = allProducts.stream()
+                .map(p -> {
+                    BigDecimal stockQty = stockRepository.getTotalQuantityOnHandByProductId(p.getId());
+                    return ProductDTO.fromEntity(p, stockQty);
+                })
+                .filter(p -> p.getQuantiteStock().compareTo(p.getSeuilMinimum()) <= 0)
+                .collect(Collectors.toList());
+
+        // 5. Dormant products (no recent sales in last 30 days)
+        Set<Long> activeProductIds = allSaleItems.stream()
+                .filter(i -> i.getSalesOrder() != null && i.getSalesOrder().getOrderDate().isAfter(LocalDate.now().minusDays(30)))
+                .map(i -> i.getProduct().getId())
+                .collect(Collectors.toSet());
+
+        List<ProductDTO> dormantProducts = allProducts.stream()
+                .filter(p -> !activeProductIds.contains(p.getId()))
+                .map(p -> {
+                    BigDecimal stockQty = stockRepository.getTotalQuantityOnHandByProductId(p.getId());
+                    return ProductDTO.fromEntity(p, stockQty);
+                })
+                .limit(5)
+                .collect(Collectors.toList());
+
         return DashboardStatsDTO.builder()
+                .chiffreAffaires(totalVentes)
+                .benefice(benefice)
+                .topClients(topClients)
+                .topProduits(topProduits)
+                .produitsStockFaible(lowStockProducts)
+                .produitsDormants(dormantProducts)
                 .totalVentes(totalVentes)
                 .totalAchats(totalAchats)
                 .valeurStock(valeurStock)
@@ -222,7 +279,7 @@ public class DashboardServiceImpl implements DashboardService {
             activities.add(RecentActivityDTO.builder()
                     .id(s.getId())
                     .type("VENTE")
-                    .description("Commande client " + s.getOrderNumber() + " (" + s.getClient().getName() + ")")
+                    .description("Commande client " + s.getOrderNumber() + " (" + (s.getClient() != null ? s.getClient().getName() : "Client") + ")")
                     .date(s.getCreatedAt())
                     .montant(s.getTotalAmount())
                     .statut(s.getStatus().name())
@@ -234,7 +291,7 @@ public class DashboardServiceImpl implements DashboardService {
             activities.add(RecentActivityDTO.builder()
                     .id(p.getId())
                     .type("ACHAT")
-                    .description("Commande fournisseur " + p.getOrderNumber() + " (" + p.getSupplier().getName() + ")")
+                    .description("Commande fournisseur " + p.getOrderNumber() + " (" + (p.getSupplier() != null ? p.getSupplier().getName() : "Fournisseur") + ")")
                     .date(p.getCreatedAt())
                     .montant(p.getTotalAmount())
                     .statut(p.getStatus().name())

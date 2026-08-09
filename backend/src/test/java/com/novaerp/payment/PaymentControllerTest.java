@@ -1,25 +1,29 @@
 package com.novaerp.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.novaerp.payment.controller.PaymentController;
 import com.novaerp.payment.dto.PaymentDTO;
 import com.novaerp.payment.entity.PaymentMethod;
 import com.novaerp.payment.entity.PaymentStatus;
 import com.novaerp.payment.service.PaymentService;
-import com.novaerp.security.jwt.CustomAccessDeniedHandler;
-import com.novaerp.security.jwt.JwtAuthenticationEntryPoint;
-import com.novaerp.security.jwt.JwtAuthenticationFilter;
-import com.novaerp.security.jwt.JwtTokenProvider;
-import com.novaerp.security.service.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
+import org.springframework.data.web.config.SpringDataJacksonConfiguration;
+import org.springframework.data.web.config.SpringDataWebSettings;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,43 +36,36 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PaymentController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class PaymentControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
+    @Mock
     private PaymentService paymentService;
 
-    @MockitoBean
-    private JwtTokenProvider jwtTokenProvider;
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new SpringDataJacksonConfiguration.PageModule(
+                    new SpringDataWebSettings(PageSerializationMode.DIRECT)));
 
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
+    @InjectMocks
+    private PaymentController paymentController;
 
-    @MockitoBean
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-    @MockitoBean
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-
-    @MockitoBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(paymentController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+    }
 
     @Test
     void testGetPaymentsEndpoint() throws Exception {
         PaymentDTO payment = PaymentDTO.builder()
-                .id(1L)
-                .reference("REG-2026-001")
-                .clientNom("LabelVie SA")
-                .montant(BigDecimal.valueOf(27600.0))
-                .statut(PaymentStatus.VALIDE)
-                .build();
+                .id(1L).reference("REG-2026-001").clientNom("LabelVie SA")
+                .montant(BigDecimal.valueOf(27600.0)).statut(PaymentStatus.VALIDE).build();
 
         when(paymentService.getPayments(any(Pageable.class), any()))
                 .thenReturn(new PageImpl<>(List.of(payment)));
@@ -83,18 +80,11 @@ class PaymentControllerTest {
     @Test
     void testCreatePaymentEndpoint() throws Exception {
         PaymentDTO input = PaymentDTO.builder()
-                .factureId(1L)
-                .montant(BigDecimal.valueOf(27600.0))
-                .modePaiement(PaymentMethod.VIREMENT)
-                .build();
+                .factureId(1L).montant(BigDecimal.valueOf(27600.0)).modePaiement(PaymentMethod.VIREMENT).build();
 
         PaymentDTO output = PaymentDTO.builder()
-                .id(1L)
-                .reference("REG-2026-001")
-                .montant(BigDecimal.valueOf(27600.0))
-                .statut(PaymentStatus.VALIDE)
-                .date(LocalDate.now())
-                .build();
+                .id(1L).reference("REG-2026-001").montant(BigDecimal.valueOf(27600.0))
+                .statut(PaymentStatus.VALIDE).date(LocalDate.now()).build();
 
         when(paymentService.createPayment(any(PaymentDTO.class))).thenReturn(output);
 

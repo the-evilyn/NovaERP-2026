@@ -69,7 +69,7 @@ class SaleServiceTest {
     @BeforeEach
     void setUp() {
         sampleClient = Client.builder().id(1L).code("CLI-0001").name("LabelVie SA").build();
-        sampleProduct = Product.builder().id(1L).name("Huile 5L").sku("HUI-005").purchasePrice(BigDecimal.valueOf(85.0)).salePrice(BigDecimal.valueOf(115.0)).build();
+        sampleProduct = Product.builder().id(1L).name("Huile 5L").sku("HUI-005").purchasePrice(BigDecimal.valueOf(85.0)).sellingPrice(BigDecimal.valueOf(115.0)).build();
         sampleWarehouse = Warehouse.builder().id(1L).code("WH-01").name("Casablanca").build();
 
         sampleOrder = SalesOrder.builder()

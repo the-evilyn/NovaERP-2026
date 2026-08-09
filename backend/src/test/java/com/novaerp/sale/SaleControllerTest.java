@@ -1,25 +1,29 @@
 package com.novaerp.sale;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.novaerp.sale.controller.SaleController;
 import com.novaerp.sale.dto.SaleDTO;
 import com.novaerp.sale.dto.SaleItemDTO;
 import com.novaerp.sale.entity.SaleStatus;
 import com.novaerp.sale.service.SaleService;
-import com.novaerp.security.jwt.CustomAccessDeniedHandler;
-import com.novaerp.security.jwt.JwtAuthenticationEntryPoint;
-import com.novaerp.security.jwt.JwtAuthenticationFilter;
-import com.novaerp.security.jwt.JwtTokenProvider;
-import com.novaerp.security.service.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
+import org.springframework.data.web.config.SpringDataJacksonConfiguration;
+import org.springframework.data.web.config.SpringDataWebSettings;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,43 +36,36 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(SaleController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class SaleControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
+    @Mock
     private SaleService saleService;
 
-    @MockitoBean
-    private JwtTokenProvider jwtTokenProvider;
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new SpringDataJacksonConfiguration.PageModule(
+                    new SpringDataWebSettings(PageSerializationMode.DIRECT)));
 
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
+    @InjectMocks
+    private SaleController saleController;
 
-    @MockitoBean
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-    @MockitoBean
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-
-    @MockitoBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(saleController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+    }
 
     @Test
     void testGetSalesEndpoint() throws Exception {
         SaleDTO sale = SaleDTO.builder()
-                .id(1L)
-                .reference("VTE-2026-001")
-                .clientNom("LabelVie SA")
-                .totalTTC(BigDecimal.valueOf(27600.0))
-                .statut(SaleStatus.LIVREE)
-                .build();
+                .id(1L).reference("VTE-2026-001").clientNom("LabelVie SA")
+                .totalTTC(BigDecimal.valueOf(27600.0)).statut(SaleStatus.LIVREE).build();
 
         when(saleService.getSales(any(Pageable.class), any()))
                 .thenReturn(new PageImpl<>(List.of(sale)));
@@ -84,22 +81,13 @@ class SaleControllerTest {
     void testCreateSaleEndpoint() throws Exception {
         SaleDTO input = SaleDTO.builder()
                 .clientId(1L)
-                .items(List.of(
-                        SaleItemDTO.builder()
-                                .produitId(1L)
-                                .quantite(BigDecimal.valueOf(10))
-                                .prixUnitaire(BigDecimal.valueOf(115.0))
-                                .build()
-                ))
+                .items(List.of(SaleItemDTO.builder().produitId(1L)
+                        .quantite(BigDecimal.valueOf(10)).prixUnitaire(BigDecimal.valueOf(115.0)).build()))
                 .build();
 
         SaleDTO output = SaleDTO.builder()
-                .id(1L)
-                .reference("VTE-2026-001")
-                .clientId(1L)
-                .statut(SaleStatus.COMMANDE)
-                .date(LocalDate.now())
-                .build();
+                .id(1L).reference("VTE-2026-001").clientId(1L)
+                .statut(SaleStatus.COMMANDE).date(LocalDate.now()).build();
 
         when(saleService.createSale(any(SaleDTO.class))).thenReturn(output);
 

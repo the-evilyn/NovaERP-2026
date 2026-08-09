@@ -20,24 +20,72 @@ public class StockMovementDTO {
 
     private Long id;
 
-    @JsonProperty("produitId")
-    @JsonAlias({"produitId", "productId"})
+    @JsonProperty("productId")
+    @JsonAlias({"productId", "produitId"})
     private Long productId;
 
+    @JsonProperty("produitId")
+    public Long getProduitId() {
+        return productId;
+    }
+
+    public void setProduitId(Long produitId) {
+        this.productId = produitId;
+    }
+
+    @JsonProperty("productNom")
+    @JsonAlias({"productNom", "produitNom", "productName"})
+    private String productNom;
+
     @JsonProperty("produitNom")
-    @JsonAlias({"produitNom", "productName"})
-    private String productName;
+    public String getProduitNom() {
+        return productNom;
+    }
+
+    public void setProduitNom(String produitNom) {
+        this.productNom = produitNom;
+    }
+
+    @JsonProperty("productName")
+    public String getProductName() {
+        return productNom;
+    }
+
+    public void setProductName(String productName) {
+        this.productNom = productName;
+    }
 
     @JsonProperty("type")
-    private String type; // ENTREE, SORTIE, AJUSTEMENT, TRANSFERT
+    private String type; // ENTREE, SORTIE, AJUSTEMENT, TRANSFERT, RETOUR
 
     @JsonProperty("quantite")
     @JsonAlias({"quantite", "quantity"})
     private BigDecimal quantite;
 
+    @JsonProperty("quantity")
+    public BigDecimal getQuantity() {
+        return quantite;
+    }
+
+    public void setQuantity(BigDecimal quantity) {
+        this.quantite = quantity;
+    }
+
     @JsonProperty("motif")
     @JsonAlias({"motif", "reason", "notes"})
     private String motif;
+
+    @JsonProperty("stockApres")
+    @Builder.Default
+    private BigDecimal stockApres = BigDecimal.ZERO;
+
+    @JsonProperty("userId")
+    @Builder.Default
+    private Long userId = 1L;
+
+    @JsonProperty("username")
+    @Builder.Default
+    private String username = "admin";
 
     @JsonProperty("date")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -51,6 +99,12 @@ public class StockMovementDTO {
     private String referenceId;
     private BigDecimal unitCost;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
+
     public static StockMovementDTO fromEntity(StockMovement sm) {
         String frontendType = switch (sm.getMovementType()) {
             case IN_PURCHASE -> "ENTREE";
@@ -60,14 +114,21 @@ public class StockMovementDTO {
             case RETURN -> "RETOUR";
         };
 
+        String motif = sm.getNotes() != null ? sm.getNotes() : (sm.getReferenceType() != null ? sm.getReferenceType() : "CORRECTION");
+
         return StockMovementDTO.builder()
                 .id(sm.getId())
                 .productId(sm.getProduct().getId())
-                .productName(sm.getProduct().getName())
+                .productNom(sm.getProduct().getName())
                 .type(frontendType)
                 .quantite(sm.getQuantity())
-                .motif(sm.getNotes() != null ? sm.getNotes() : sm.getReferenceId())
+                .motif(motif)
+                .stockApres(sm.getQuantity())
+                .userId(1L)
+                .username(sm.getCreatedBy() != null ? sm.getCreatedBy() : "admin")
                 .date(sm.getCreatedAt())
+                .createdAt(sm.getCreatedAt())
+                .updatedAt(sm.getUpdatedAt())
                 .sourceWarehouseId(sm.getSourceWarehouse() != null ? sm.getSourceWarehouse().getId() : null)
                 .sourceWarehouseName(sm.getSourceWarehouse() != null ? sm.getSourceWarehouse().getName() : null)
                 .targetWarehouseId(sm.getTargetWarehouse() != null ? sm.getTargetWarehouse().getId() : null)

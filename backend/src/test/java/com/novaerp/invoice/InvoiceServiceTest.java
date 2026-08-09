@@ -56,8 +56,8 @@ class InvoiceServiceTest {
 
     @BeforeEach
     void setUp() {
-        sampleClient = Client.builder().id(1L).code("CLI-0001").name("LabelVie SA").paymentTerms(30).build();
-        sampleProduct = Product.builder().id(1L).name("Huile 5L").sku("HUI-005").purchasePrice(BigDecimal.valueOf(85.0)).salePrice(BigDecimal.valueOf(115.0)).build();
+        sampleClient = Client.builder().id(1L).code("CLI-0001").name("LabelVie SA").build();
+        sampleProduct = Product.builder().id(1L).name("Huile 5L").sku("HUI-005").purchasePrice(BigDecimal.valueOf(85.0)).sellingPrice(BigDecimal.valueOf(115.0)).build();
 
         sampleInvoice = Invoice.builder()
                 .id(1L)
@@ -104,9 +104,9 @@ class InvoiceServiceTest {
     void testCreateInvoice() {
         InvoiceDTO input = InvoiceDTO.builder()
                 .clientId(1L)
-                .items(List.of(
+                .lignes(List.of(
                         InvoiceItemDTO.builder()
-                                .produitId(1L)
+                                .productId(1L)
                                 .quantite(BigDecimal.valueOf(10))
                                 .prixUnitaire(BigDecimal.valueOf(115.0))
                                 .build()

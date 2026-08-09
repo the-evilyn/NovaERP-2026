@@ -20,30 +20,39 @@ public class InvoiceItemDTO {
     private Long id;
 
     @NotNull(message = "Product ID is required")
-    @JsonProperty("produitId")
-    @JsonAlias({"produitId", "productId"})
-    private Long produitId;
-
     @JsonProperty("productId")
-    public Long getProductId() {
-        return produitId;
+    @JsonAlias({"productId", "produitId"})
+    private Long productId;
+
+    @JsonProperty("produitId")
+    public Long getProduitId() {
+        return productId;
     }
 
-    public void setProductId(Long productId) {
-        this.produitId = productId;
+    public void setProduitId(Long produitId) {
+        this.productId = produitId;
     }
+
+    @JsonProperty("productNom")
+    @JsonAlias({"productNom", "produitNom", "productName"})
+    private String productNom;
 
     @JsonProperty("produitNom")
-    @JsonAlias({"produitNom", "productName"})
-    private String produitNom;
+    public String getProduitNom() {
+        return productNom;
+    }
+
+    public void setProduitNom(String produitNom) {
+        this.productNom = produitNom;
+    }
 
     @JsonProperty("productName")
     public String getProductName() {
-        return produitNom;
+        return productNom;
     }
 
     public void setProductName(String productName) {
-        this.produitNom = productName;
+        this.productNom = productName;
     }
 
     @NotNull(message = "Quantity is required")
@@ -81,8 +90,8 @@ public class InvoiceItemDTO {
     public static InvoiceItemDTO fromEntity(InvoiceItem item) {
         return InvoiceItemDTO.builder()
                 .id(item.getId())
-                .produitId(item.getProduct().getId())
-                .produitNom(item.getProduct().getName())
+                .productId(item.getProduct().getId())
+                .productNom(item.getProduct().getName())
                 .quantite(item.getQuantity())
                 .prixUnitaire(item.getUnitPrice())
                 .total(item.getTotalAmount() != null ? item.getTotalAmount() : item.getSubtotal())

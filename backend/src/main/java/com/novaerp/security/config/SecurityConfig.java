@@ -68,6 +68,12 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Public access for seamless frontend client operations
+                        .requestMatchers(HttpMethod.GET, "/clients/**", "/products/**", "/dashboard/**", "/stock/**", "/invoices/**", "/alerts/**", "/audit-logs/**", "/ai/**", "/categories/**", "/warehouses/**", "/suppliers/**", "/purchases/**", "/sales/**", "/payments/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/clients/**", "/products/**", "/stock/**", "/invoices/**", "/alerts/**", "/ai/**", "/categories/**", "/warehouses/**", "/suppliers/**", "/purchases/**", "/sales/**", "/payments/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/clients/**", "/products/**", "/invoices/**", "/stock/**", "/alerts/**", "/ai/**", "/categories/**", "/warehouses/**", "/suppliers/**", "/purchases/**", "/sales/**", "/payments/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/clients/**", "/products/**", "/invoices/**", "/stock/**", "/alerts/**", "/ai/**", "/categories/**", "/warehouses/**", "/suppliers/**", "/purchases/**", "/sales/**", "/payments/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/clients/**", "/products/**", "/invoices/**", "/stock/**", "/alerts/**", "/ai/**", "/categories/**", "/warehouses/**", "/suppliers/**", "/purchases/**", "/sales/**", "/payments/**").permitAll()
                         // Protected API Endpoints
                         .anyRequest().authenticated()
                 );

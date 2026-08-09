@@ -27,17 +27,26 @@ public class InvoiceDTO {
 
     private Long id;
 
+    @JsonProperty("numero")
+    @JsonAlias({"numero", "reference", "invoiceNumber"})
+    private String numero;
+
     @JsonProperty("reference")
-    @JsonAlias({"reference", "invoiceNumber"})
-    private String reference;
+    public String getReference() {
+        return numero;
+    }
+
+    public void setReference(String reference) {
+        this.numero = reference;
+    }
 
     @JsonProperty("invoiceNumber")
     public String getInvoiceNumber() {
-        return reference;
+        return numero;
     }
 
     public void setInvoiceNumber(String invoiceNumber) {
-        this.reference = invoiceNumber;
+        this.numero = invoiceNumber;
     }
 
     @NotNull(message = "Client ID is required")
@@ -142,9 +151,19 @@ public class InvoiceDTO {
     private BigDecimal discountAmount;
     private String notes;
 
-    @JsonProperty("items")
+    @JsonProperty("lignes")
+    @JsonAlias({"lignes", "items"})
     @Builder.Default
-    private List<InvoiceItemDTO> items = new ArrayList<>();
+    private List<InvoiceItemDTO> lignes = new ArrayList<>();
+
+    @JsonProperty("items")
+    public List<InvoiceItemDTO> getItems() {
+        return lignes;
+    }
+
+    public void setItems(List<InvoiceItemDTO> items) {
+        this.lignes = items;
+    }
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -155,7 +174,7 @@ public class InvoiceDTO {
     public static InvoiceDTO fromEntity(Invoice invoice) {
         return InvoiceDTO.builder()
                 .id(invoice.getId())
-                .reference(invoice.getInvoiceNumber())
+                .numero(invoice.getInvoiceNumber())
                 .clientId(invoice.getClient().getId())
                 .clientNom(invoice.getClient().getName())
                 .salesOrderId(invoice.getSalesOrder() != null ? invoice.getSalesOrder().getId() : null)
@@ -169,7 +188,7 @@ public class InvoiceDTO {
                 .montantPaye(invoice.getPaidAmount())
                 .discountAmount(invoice.getDiscountAmount())
                 .notes(invoice.getNotes())
-                .items(invoice.getItems().stream().map(InvoiceItemDTO::fromEntity).collect(Collectors.toList()))
+                .lignes(invoice.getItems().stream().map(InvoiceItemDTO::fromEntity).collect(Collectors.toList()))
                 .createdAt(invoice.getCreatedAt())
                 .updatedAt(invoice.getUpdatedAt())
                 .build();

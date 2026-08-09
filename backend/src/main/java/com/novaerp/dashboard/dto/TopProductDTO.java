@@ -16,6 +16,15 @@ public class TopProductDTO {
 
     private Long id;
 
+    @JsonProperty("productId")
+    public Long getProductId() {
+        return id;
+    }
+
+    public void setProductId(Long productId) {
+        this.id = productId;
+    }
+
     @JsonProperty("nom")
     private String nom;
 

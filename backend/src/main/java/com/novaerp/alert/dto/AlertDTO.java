@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -59,9 +60,18 @@ public class AlertDTO {
     }
 
     @JsonProperty("lu")
-    @JsonAlias({"lu", "isRead", "read"})
+    @JsonAlias({"lu", "lue", "isRead", "read"})
     @Builder.Default
     private Boolean lu = false;
+
+    @JsonProperty("lue")
+    public Boolean getLue() {
+        return lu;
+    }
+
+    public void setLue(Boolean lue) {
+        this.lu = lue;
+    }
 
     @JsonProperty("isRead")
     public Boolean getIsRead() {
@@ -73,7 +83,7 @@ public class AlertDTO {
     }
 
     @JsonProperty("entiteId")
-    @JsonAlias({"entiteId", "entityId"})
+    @JsonAlias({"entiteId", "entityId", "productId"})
     private Long entiteId;
 
     @JsonProperty("entityId")
@@ -84,6 +94,27 @@ public class AlertDTO {
     public void setEntityId(Long entityId) {
         this.entiteId = entityId;
     }
+
+    @JsonProperty("productId")
+    public Long getProductId() {
+        return entiteId;
+    }
+
+    public void setProductId(Long productId) {
+        this.entiteId = productId;
+    }
+
+    @JsonProperty("productNom")
+    @JsonAlias({"productNom", "produitNom"})
+    private String productNom;
+
+    @JsonProperty("quantiteActuelle")
+    @Builder.Default
+    private BigDecimal quantiteActuelle = BigDecimal.ZERO;
+
+    @JsonProperty("seuilMinimum")
+    @Builder.Default
+    private BigDecimal seuilMinimum = BigDecimal.ZERO;
 
     @JsonProperty("entiteType")
     @JsonAlias({"entiteType", "entityType"})
@@ -119,6 +150,7 @@ public class AlertDTO {
                 .lu(a.getIsRead())
                 .entiteId(a.getEntityId())
                 .entiteType(a.getEntityType())
+                .productNom(a.getTitle())
                 .dateCreation(a.getCreatedAt())
                 .createdAt(a.getCreatedAt())
                 .updatedAt(a.getUpdatedAt())

@@ -1,25 +1,29 @@
 package com.novaerp.invoice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.novaerp.invoice.controller.InvoiceController;
 import com.novaerp.invoice.dto.InvoiceDTO;
 import com.novaerp.invoice.dto.InvoiceItemDTO;
 import com.novaerp.invoice.entity.InvoiceStatus;
 import com.novaerp.invoice.service.InvoiceService;
-import com.novaerp.security.jwt.CustomAccessDeniedHandler;
-import com.novaerp.security.jwt.JwtAuthenticationEntryPoint;
-import com.novaerp.security.jwt.JwtAuthenticationFilter;
-import com.novaerp.security.jwt.JwtTokenProvider;
-import com.novaerp.security.service.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
+import org.springframework.data.web.config.SpringDataJacksonConfiguration;
+import org.springframework.data.web.config.SpringDataWebSettings;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,43 +36,36 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(InvoiceController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class InvoiceControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
+    @Mock
     private InvoiceService invoiceService;
 
-    @MockitoBean
-    private JwtTokenProvider jwtTokenProvider;
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new SpringDataJacksonConfiguration.PageModule(
+                    new SpringDataWebSettings(PageSerializationMode.DIRECT)));
 
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
+    @InjectMocks
+    private InvoiceController invoiceController;
 
-    @MockitoBean
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-    @MockitoBean
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-
-    @MockitoBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(invoiceController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+    }
 
     @Test
     void testGetInvoicesEndpoint() throws Exception {
         InvoiceDTO invoice = InvoiceDTO.builder()
-                .id(1L)
-                .reference("FAC-2026-001")
-                .clientNom("LabelVie SA")
-                .totalTTC(BigDecimal.valueOf(27600.0))
-                .statut(InvoiceStatus.VALIDEE)
-                .build();
+                .id(1L).numero("FAC-2026-001").clientNom("LabelVie SA")
+                .totalTTC(BigDecimal.valueOf(27600.0)).statut(InvoiceStatus.VALIDEE).build();
 
         when(invoiceService.getInvoices(any(Pageable.class), any()))
                 .thenReturn(new PageImpl<>(List.of(invoice)));
@@ -84,22 +81,13 @@ class InvoiceControllerTest {
     void testCreateInvoiceEndpoint() throws Exception {
         InvoiceDTO input = InvoiceDTO.builder()
                 .clientId(1L)
-                .items(List.of(
-                        InvoiceItemDTO.builder()
-                                .produitId(1L)
-                                .quantite(BigDecimal.valueOf(10))
-                                .prixUnitaire(BigDecimal.valueOf(115.0))
-                                .build()
-                ))
+                .lignes(List.of(InvoiceItemDTO.builder().productId(1L)
+                        .quantite(BigDecimal.valueOf(10)).prixUnitaire(BigDecimal.valueOf(115.0)).build()))
                 .build();
 
         InvoiceDTO output = InvoiceDTO.builder()
-                .id(1L)
-                .reference("FAC-2026-001")
-                .clientId(1L)
-                .statut(InvoiceStatus.VALIDEE)
-                .date(LocalDate.now())
-                .build();
+                .id(1L).numero("FAC-2026-001").clientId(1L)
+                .statut(InvoiceStatus.VALIDEE).date(LocalDate.now()).build();
 
         when(invoiceService.createInvoice(any(InvoiceDTO.class))).thenReturn(output);
 

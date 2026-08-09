@@ -153,13 +153,13 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .tva(salesOrder.getTaxRate())
                 .discountAmount(salesOrder.getDiscountAmount())
                 .notes("Facture issue de la commande " + salesOrder.getOrderNumber())
-                .items(new ArrayList<>())
+                .lignes(new ArrayList<>())
                 .build();
 
         for (SalesOrderItem soItem : salesOrder.getItems()) {
-            dto.getItems().add(InvoiceItemDTO.builder()
-                    .produitId(soItem.getProduct().getId())
-                    .produitNom(soItem.getProduct().getName())
+            dto.getLignes().add(InvoiceItemDTO.builder()
+                    .productId(soItem.getProduct().getId())
+                    .productNom(soItem.getProduct().getName())
                     .quantite(soItem.getQuantityOrdered())
                     .prixUnitaire(soItem.getUnitPrice())
                     .build());

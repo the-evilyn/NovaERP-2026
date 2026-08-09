@@ -20,60 +20,75 @@ public class AuditLogDTO {
 
     private Long id;
 
-    @JsonProperty("utilisateurId")
-    @JsonAlias({"utilisateurId", "userId"})
-    private Long utilisateurId;
-
     @JsonProperty("userId")
-    public Long getUserId() {
-        return utilisateurId;
+    @JsonAlias({"userId", "utilisateurId"})
+    private Long userId;
+
+    @JsonProperty("utilisateurId")
+    public Long getUtilisateurId() {
+        return userId;
     }
 
-    public void setUserId(Long userId) {
-        this.utilisateurId = userId;
+    public void setUtilisateurId(Long utilisateurId) {
+        this.userId = utilisateurId;
     }
+
+    @JsonProperty("username")
+    @JsonAlias({"username", "utilisateurNom", "userName"})
+    private String username;
 
     @JsonProperty("utilisateurNom")
-    @JsonAlias({"utilisateurNom", "userName"})
-    private String utilisateurNom;
+    public String getUtilisateurNom() {
+        return username;
+    }
+
+    public void setUtilisateurNom(String utilisateurNom) {
+        this.username = utilisateurNom;
+    }
 
     @JsonProperty("userName")
     public String getUserName() {
-        return utilisateurNom;
+        return username;
     }
 
     public void setUserName(String userName) {
-        this.utilisateurNom = userName;
+        this.username = userName;
     }
 
     @JsonProperty("action")
     private AuditAction action;
 
-    @JsonProperty("entite")
-    @JsonAlias({"entite", "entity", "entityType"})
-    private String entite;
-
     @JsonProperty("entityType")
-    public String getEntityType() {
-        return entite;
+    @JsonAlias({"entityType", "entite", "entity"})
+    private String entityType;
+
+    @JsonProperty("entite")
+    public String getEntite() {
+        return entityType;
     }
 
-    public void setEntityType(String entityType) {
-        this.entite = entityType;
+    public void setEntite(String entite) {
+        this.entityType = entite;
     }
-
-    @JsonProperty("entiteId")
-    @JsonAlias({"entiteId", "entityId"})
-    private Long entiteId;
 
     @JsonProperty("entityId")
-    public Long getEntityId() {
-        return entiteId;
+    @JsonAlias({"entityId", "entiteId"})
+    private Long entityId;
+
+    @JsonProperty("entiteId")
+    public Long getEntiteId() {
+        return entityId;
     }
 
-    public void setEntityId(Long entityId) {
-        this.entiteId = entityId;
+    public void setEntiteId(Long entiteId) {
+        this.entityId = entiteId;
     }
+
+    @JsonProperty("ancienneValeur")
+    private String ancienneValeur;
+
+    @JsonProperty("nouvelleValeur")
+    private String nouvelleValeur;
 
     @JsonProperty("details")
     private String details;
@@ -90,18 +105,27 @@ public class AuditLogDTO {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
+
     public static AuditLogDTO fromEntity(AuditLog a) {
+        Long uId = a.getUser() != null ? a.getUser().getId() : 1L;
+        String uName = a.getUserName() != null ? a.getUserName() : (a.getUser() != null ? a.getUser().getUsername() : "salma");
+
         return AuditLogDTO.builder()
                 .id(a.getId())
-                .utilisateurId(a.getUser() != null ? a.getUser().getId() : null)
-                .utilisateurNom(a.getUserName() != null ? a.getUserName() : (a.getUser() != null ? a.getUser().getFirstName() + " " + a.getUser().getLastName() : "SYSTEM"))
+                .userId(uId)
+                .username(uName)
                 .action(a.getAction())
-                .entite(a.getEntityType())
-                .entiteId(a.getEntityId())
+                .entityType(a.getEntityType())
+                .entityId(a.getEntityId())
+                .ancienneValeur(null)
+                .nouvelleValeur(a.getDetails())
                 .details(a.getDetails())
                 .ipAddress(a.getIpAddress())
                 .date(a.getTimestamp())
                 .createdAt(a.getCreatedAt())
+                .updatedAt(a.getCreatedAt())
                 .build();
     }
 }
